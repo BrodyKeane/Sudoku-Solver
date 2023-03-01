@@ -1,5 +1,4 @@
 
-
 class Solver:
     def __init__(self, sudoku) -> None:
         self.sudoku = sudoku

@@ -1,5 +1,6 @@
 class Tile:
-    def __init__(self, value=0):
+    def __init__(self, position, value=0):
+        self.position = position
         self.value = value
         self.possible_values = {i for i in range(1, 10)}
         self.priority = len(self.possible_values)
@@ -15,25 +16,34 @@ class Tile:
         return str(self.value)
 
 
-
 class Sudoku:
     def __init__(self, values):
-        self.tiles = [[Tile(value) for value in row] for row in values]
+        self.tiles = []
+        self.remaining = set()
+        for i, row in enumerate(values):
+            row_of_tiles = []
+            for j, value in enumerate(row):
+                tile = Tile((i, j), value)
+                row_of_tiles.append(tile)
+                if value == 0:
+                    self.remaining.add(tile) 
+            self.tiles.append(row_of_tiles)
 
-    def get_tile(self, row, col):
-        return self.tiles[row][col]
 
-    def set_tile(self, row, col, value):
-        tile = self.get_tile(row, col)
+    def get_matrix(self):
+        return self.tiles
+
+    def set_tile(self, tile, value):
         tile.value = value
         tile.possible_values = set()
+        self.remaining.discard(tile)
 
 
     def get_row(self, row):
-        return [self.get_tile(row, col) for col in range(9)]
+        return self.tiles[row]
 
     def get_col(self, col):
-        return [self.get_tile(row, col) for row in range(9)]
+        return [row[col] for row in self.tiles]
 
 
     def get_subgrid_from_id(self, id):
@@ -54,8 +64,12 @@ class Sudoku:
         subgrid = []
         for i in range(sub_row * 3, sub_row * 3 + 3):
             for j in range(sub_col * 3, sub_col * 3 + 3):
-                subgrid.append(self.get_tile(i, j))
+                subgrid.append(self.tiles[i][j])
         return subgrid
+    
+    def get_tiles_by_priority(self):
+        priority = sorted(self.remaining, key=lambda tile: tile.priority)
+        return priority
 
 
     def is_valid(self):
@@ -78,10 +92,9 @@ class Sudoku:
         return True
 
     def is_solved(self):
-        for row in range(9):
-            for col in range(9):
-                tile = self.get_tile(row, col)
-                if not tile.is_solved:
+        for row in self.tiles:
+            for tile in row:
+                if not tile.is_solved():
                     return False
         return self.is_valid()
 
@@ -95,7 +108,7 @@ class Sudoku:
             for col in range(9):
                 if col % 3 == 0:
                     result += "| "
-                tile = self.get_tile(row, col)
+                tile = self.tiles[row][col]
                 if tile.value == 0:
                     result += ". "
                 else:
@@ -104,18 +117,17 @@ class Sudoku:
         result += "+-------+-------+-------+"
         return result
 
-# puzzle = [
-#     [0, 0, 0,  2, 6, 0,  7, 0, 1],
-#     [6, 8, 0,  0, 7, 0,  0, 9, 0],
-#     [1, 9, 0,  0, 0, 4,  5, 0, 0],
-
-#     [8, 2, 0,  1, 0, 0,  0, 4, 0],
-#     [0, 0, 4,  6, 0, 2,  9, 0, 0],
-#     [0, 5, 0,  0, 0, 3,  0, 2, 8],
-
-#     [0, 0, 9,  3, 0, 0,  0, 7, 4],
-#     [0, 4, 0,  0, 5, 0,  0, 3, 6],
-#     [7, 0, 3,  0, 1, 8,  0, 0, 0]
+# tiles = [
+#     [8, 2, 1, 5, 6, 7, 9, 3, 4],
+#     [3, 9, 7, 4, 2, 1, 8, 5, 6],
+#     [6, 4, 5, 9, 3, 8, 7, 1, 2],
+#     [5, 7, 4, 8, 1, 6, 3, 2, 9],
+#     [2, 1, 8, 3, 9, 4, 6, 7, 5],
+#     [9, 3, 6, 7, 5, 2, 4, 8, 1],
+#     [1, 8, 2, 6, 7, 9, 5, 4, 3],
+#     [7, 6, 3, 1, 4, 5, 2, 9, 8],
+#     [4, 5, 9, 2, 8, 3, 1, 6, 7]
 # ]
-# sudoku = Sudoku(puzzle)
+# sudoku = Sudoku(tiles)
+# print(sudoku.is_solved())
 # print(sudoku)
