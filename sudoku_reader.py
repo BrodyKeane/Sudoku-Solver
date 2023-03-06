@@ -78,7 +78,7 @@ class SudokuReader:
         for i, result in enumerate(results):
             row = i // SUDOKU_GRID_SIZE
             col = i % SUDOKU_GRID_SIZE
-            sudoku[row][col] = result
+            sudoku[row, col] = result
 
         return sudoku
 
