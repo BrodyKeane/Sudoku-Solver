@@ -1,48 +1,73 @@
-
 class Solver:
-    def __init__(self, sudoku) -> None:
-        self.sudoku = sudoku
-        self.progress_made = False
+    def __init__(self, board):
+        self.board = board
+        self.length = len(board)
+        self.width = len(board[0])
 
+    def get_solution(self):
+        print(self)
+        self.solve()
+        print(self)
+        return self.board
+    
     def solve(self):
-        while not self.sudoku.is_solved():
-            self.progress_made = False
-            self.solve_rows()
-            self.solve_cols()
-            self.solve_subgrids()
-            if not self.progress_made:
-                print(self.sudoku)
-                print('Failed to solve puzzle')
-                break
-                
+        find = self.find_empty()
+        if not find:
+            return True
 
-    def solve_rows(self):
+        row, col = find
+
+        for i in range(1,10):
+            if self.valid(i, (row, col)):
+                self.board[row, col] = i
+
+                if self.solve():
+                    return True
+
+                self.board[row, col] = 0
+
+        return False
+    
+    def valid(self, num, pos):
+        row, col = pos
+        for i in range(self.width):
+            if self.board[row, i] == num and col != i:
+                return False
+            
+        for i in range(self.length):
+            if self.board[i, col] == num and row != i:
+                return False
+
+        box_x = col // 3
+        box_y = row // 3
+
+        for i in range(box_y*3, box_y*3 + 3):
+            for j in range(box_x * 3, box_x*3 + 3):
+                if self.board[i, j] == num and (i,j) != pos:
+                    return False
+        return True
+
+    def find_empty(self):
+        for i in range(self.length):
+            for j in range(self.width):
+                if self.board[i, j] == 0:
+                    return (i, j)  # row, col
+        return None
+
+
+    def __str__(self):
+        result = "\n"
         for row in range(9):
-            group = self.sudoku.get_row(row)
-            self.solve_group(group)
-
-    def solve_cols(self):
-        for col in range(9):
-            group = self.sudoku.get_col(col)
-            self.solve_group(group)
-
-    def solve_subgrids(self):
-        for subgrid in range(1,10):
-            group = self.sudoku.get_subgrid_from_id(subgrid)
-            self.solve_group(group)
-
-    def solve_group(self, group):
-        solved = set()
-
-        for tile in group:
-            solved.add(tile.value)
-
-        for tile in group:
-            if not tile.is_solved():
-                tile.discard_values(solved)
-                self.solve_tile(tile)
-
-    def solve_tile(self, tile):
-        if len(tile.possible_values) == 1:
-            tile.value = tile.possible_values.pop()
-            self.progress_made = True
+            if row % 3 == 0:
+                result += "+-------+-------+-------+\n"
+            for col in range(9):
+                if col % 3 == 0:
+                    result += "| "
+                tile = self.board[row][col]
+                if tile == 0:
+                    result += ". "
+                else:
+                    result += str(tile) + " "
+            result += "|\n"
+        result += "+-------+-------+-------+"
+        return result
